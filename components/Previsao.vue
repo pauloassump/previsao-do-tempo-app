@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-row justify="center" align="center">
-    <v-col cols="12" md="4">
+    <v-col cols="12" md="6">
       <v-text-field
           append-icon="mdi-magnify"
           v-model="city"
@@ -12,6 +12,11 @@
     </v-col>
     </v-row>
     <v-row>
+      <v-col cols="12">
+        <v-card-title v-if="showTitle" class="white--text">
+          PREVISÃO DO TEMPO PARA OS PRÓXIMOS 5 DIAS:
+        </v-card-title>
+      </v-col>
       <v-card
         v-for="previsao in previsoes"
         :key="previsao.id"
@@ -20,7 +25,7 @@
       >
         <v-list-item two-line>
           <v-list-item-content>
-            <v-list-item-title class="headline" v-for="clima in previsao.weather" :key="clima.main">
+            <v-list-item-title class="headline blue--text" v-for="clima in previsao.weather" :key="clima.main">
               {{ clima.description | traduzirStatus }}
             </v-list-item-title>
             <v-list-item-subtitle>Horário: {{ previsao.dt_txt | moment("dddd - HH:mm") }}</v-list-item-subtitle>
@@ -30,14 +35,16 @@
         <v-card-text>
           <v-row align="center">
             <v-col
-              cols="12"
+              cols="6"
             >
               <p>Min: {{ previsao.main.temp_min | converterTemperatura }} ºC</p>
               <p>Max: {{ previsao.main.temp_max | converterTemperatura }} ºC</p>
             </v-col>
-            <!-- <v-col cols="6">
-              <h4 v-for="clima in status" :key="clima.main">{{ clima.main }}</h4>
-            </v-col> -->
+            <v-col cols="6">
+              <v-icon v-for="icon in previsao.weather" :key="icon.main" large>
+                {{ icon.main | iconeClima }}
+              </v-icon>
+            </v-col>
           </v-row>
         </v-card-text>
 
@@ -53,13 +60,11 @@
 <script>
 import Previsao from '@/services/previsao-tempo'
 
-import moment from 'moment'
-
 export default {
   data () {
     return {
-      previsoes: [],
-      status: [],
+      previsoes:[],
+      showTitle: false,
       city: '',
       info: {
         city: {
@@ -101,6 +106,18 @@ export default {
       }
       
       return value
+    },
+    iconeClima (value) {
+      if (value == 'Rain') {
+        value = 'mdi-weather-pouring'
+      }
+      if (value == 'Clouds') {
+        value = 'mdi-cloud-outline'
+      }
+      if (value == 'Clear') {
+        value = 'mdi-weather-sunny'
+      }
+      return value
     }
   },
   methods: {
@@ -108,7 +125,8 @@ export default {
       Previsao.pesquisarClima(this.city)
       .then(res => {
         this.info = res.data,
-        this.previsoes = res.data.list
+        this.previsoes = res.data.list,
+        this.showTitle = true
       })
     }
   }
