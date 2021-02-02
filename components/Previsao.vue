@@ -11,10 +11,10 @@
         ></v-text-field>
     </v-col>
     </v-row>
-    <v-row>
+    <v-row >
       <v-col cols="12">
         <v-card-title v-if="showTitle" class="white--text">
-          PREVISÃO DO TEMPO PARA OS PRÓXIMOS 5 DIAS:
+          PREVISÃO DO TEMPO PARA OS PRÓXIMOS 5 DIAS EM: {{ info.city.name }}
         </v-card-title>
       </v-col>
       <v-card
@@ -54,6 +54,26 @@
 
       </v-card>
     </v-row>
+
+    <v-row v-if="loading" justify="center" align="center">
+      <v-progress-circular
+        :size="70"
+        :width="7"
+        color="blue"
+        indeterminate
+      ></v-progress-circular>
+    </v-row>
+
+    <v-snackbar
+      v-model="showToadster"
+      :timeout="3000"
+      top
+    >
+      <h4 class="text-center">
+        {{ todsterMessage }}
+      </h4>
+    </v-snackbar>
+
   </div>
 </template>
 
@@ -65,6 +85,9 @@ export default {
     return {
       previsoes:[],
       showTitle: false,
+      showToadster: false,
+      todsterMessage: false,
+      loading: false,
       city: '',
       info: {
         city: {
@@ -121,13 +144,30 @@ export default {
     }
   },
   methods: {
+    addToadster (message) {
+      this.todsterMessage = message
+      this.showToadster = true
+    },
     pesquisar () {
-      Previsao.pesquisarClima(this.city)
-      .then(res => {
-        this.info = res.data,
-        this.previsoes = res.data.list,
-        this.showTitle = true
-      })
+      this.loading = true
+
+      if (this.city == '') {
+        this.addToadster('Preencha o campo para realizar a busca.')
+      }
+
+      else {
+        Previsao.pesquisarClima(this.city)
+        .then(res => {
+            this.info = res.data,
+            this.previsoes = res.data.list,
+            this.showTitle = true,
+            this.loading = false
+          })
+        .catch(e => {
+          this.addToadster('Não foi possível realizar a busca.')
+          this.loading = false
+        })
+      }
     }
   }
 }
